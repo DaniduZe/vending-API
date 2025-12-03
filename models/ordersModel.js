@@ -38,4 +38,13 @@ export const OrdersModel = {
   return { rows };
   },
 
+  async updateStatus(id, status, { expectedStatus = null } = {}) {
+    const query = expectedStatus
+      ? 'UPDATE orders SET status = $2, updated_at = NOW() WHERE id = $1 AND status = $3 RETURNING *'
+      : 'UPDATE orders SET status = $2, updated_at = NOW() WHERE id = $1 RETURNING *';
+    const params = expectedStatus ? [id, status, expectedStatus] : [id, status];
+    const { rows } = await pool.query(query, params);
+    return rows[0] || null;
+  }
+
 };

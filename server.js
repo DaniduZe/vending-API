@@ -2,8 +2,6 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import http from 'http';
-import { Server as SocketIOServer } from 'socket.io';
-
 import pool from './config/db.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import userRoutes from './routes/userRoutes.js';
@@ -13,7 +11,6 @@ import purchaseRoutes from './routes/purchaseRoutes.js';
 
 import { initMqtt } from './config/mqtt.js';
 import { wireUpMqttAck } from './services/mqttAckListener.js';
-import { initCustomerSocket } from './realtime/customerSocket.js'; // 👈 new import
 
 dotenv.config();
 
@@ -33,17 +30,9 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 
-// 🔌 WebSocket setup (for customers only)
-const io = new SocketIOServer(server, {
-  cors: { origin: '*' },
-});
-
-// Initialize customer WebSocket logic
-initCustomerSocket(io);
-
 // 🔄 Initialize MQTT connection
 const mqttClient = initMqtt();
-wireUpMqttAck(mqttClient, io);
+wireUpMqttAck(mqttClient);
 
 // ✅ Database check
 pool.query('SELECT 1')
